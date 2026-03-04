@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Check } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import type { ResourceAllocation, Stream } from '../../types';
@@ -25,10 +25,11 @@ const emptyForm: AllocationFormData = {
   allocationPercentage: 100,
 };
 
-export const ResourceAllocationPage: React.FC = () => {
+export const ResourceAllocationPage = () => {
   const {
     resourceAllocations,
     projects,
+    timesheets,
     addResourceAllocation,
     updateResourceAllocation,
     deleteResourceAllocation,
@@ -39,6 +40,53 @@ export const ResourceAllocationPage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<AllocationFormData>(emptyForm);
+
+  const [resourceDropdownOpen, setResourceDropdownOpen] = useState(false);
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+  const [projectSearchText, setProjectSearchText] = useState('');
+  const resourceDropdownRef = useRef<HTMLDivElement>(null);
+  const projectDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (resourceDropdownRef.current && !resourceDropdownRef.current.contains(e.target as Node)) {
+        setResourceDropdownOpen(false);
+      }
+      if (projectDropdownRef.current && !projectDropdownRef.current.contains(e.target as Node)) {
+        setProjectDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const distinctResourceNames = useMemo(() => {
+    const names = new Set(timesheets.map((t) => t.resourceName));
+    return [...names].sort();
+  }, [timesheets]);
+
+  const filteredResourceNames = useMemo(() => {
+    if (!formData.resourceName) return distinctResourceNames;
+    const lower = formData.resourceName.toLowerCase();
+    return distinctResourceNames.filter((n) => n.toLowerCase().includes(lower));
+  }, [distinctResourceNames, formData.resourceName]);
+
+  const availableProjects = useMemo(() => {
+    return projects
+      .filter((p) => p.status?.toLowerCase() !== 'completed')
+      .sort((a, b) => (a.description || '').localeCompare(b.description || ''));
+  }, [projects]);
+
+  const filteredProjects = useMemo(() => {
+    if (!projectSearchText) return availableProjects;
+    const lower = projectSearchText.toLowerCase();
+    return availableProjects.filter(
+      (p) =>
+        (p.description || '').toLowerCase().includes(lower) ||
+        p.projectId.toLowerCase().includes(lower) ||
+        (p.projectTitle || '').toLowerCase().includes(lower)
+    );
+  }, [availableProjects, projectSearchText]);
 
   const filteredAllocations = useMemo(() => {
     return resourceAllocations.filter((a) => {
@@ -51,18 +99,22 @@ export const ResourceAllocationPage: React.FC = () => {
     });
   }, [resourceAllocations, searchTerm, filterStream]);
 
-  const handleProjectSelect = (description: string) => {
-    const project = projects.find((p) => p.description === description);
-    setFormData((prev) => ({
-      ...prev,
-      projectDescription: description,
-      projectId: project?.projectId || '',
-    }));
+  const handleProjectSelect = (projectId: string) => {
+    const project = availableProjects.find((p) => p.projectId === projectId);
+    if (project) {
+      setFormData((prev) => ({
+        ...prev,
+        projectDescription: project.description,
+        projectId: project.projectId,
+      }));
+      setProjectSearchText(project.description);
+    }
+    setProjectDropdownOpen(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (editingId) {
       updateResourceAllocation(editingId, formData);
     } else {
@@ -73,6 +125,7 @@ export const ResourceAllocationPage: React.FC = () => {
     }
 
     setFormData(emptyForm);
+    setProjectSearchText('');
     setIsFormOpen(false);
     setEditingId(null);
   };
@@ -87,6 +140,7 @@ export const ResourceAllocationPage: React.FC = () => {
       endDate: allocation.endDate,
       allocationPercentage: allocation.allocationPercentage,
     });
+    setProjectSearchText(allocation.projectDescription);
     setEditingId(allocation.id);
     setIsFormOpen(true);
   };
@@ -99,6 +153,7 @@ export const ResourceAllocationPage: React.FC = () => {
 
   const handleCancel = () => {
     setFormData(emptyForm);
+    setProjectSearchText('');
     setIsFormOpen(false);
     setEditingId(null);
   };
@@ -143,7 +198,7 @@ export const ResourceAllocationPage: React.FC = () => {
 
       {isFormOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">
                 {editingId ? 'Edit Allocation' : 'New Allocation'}
@@ -154,7 +209,8 @@ export const ResourceAllocationPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
+              {/* Resource Name - type-ahead */}
+              <div className="relative" ref={resourceDropdownRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Resource Name
                 </label>
@@ -162,17 +218,36 @@ export const ResourceAllocationPage: React.FC = () => {
                   type="text"
                   required
                   value={formData.resourceName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, resourceName: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, resourceName: e.target.value }));
+                    setResourceDropdownOpen(true);
+                  }}
+                  onFocus={() => setResourceDropdownOpen(true)}
+                  placeholder="Type to search resources..."
                   className="w-full border rounded-lg px-3 py-2"
+                  autoComplete="off"
                 />
+                {resourceDropdownOpen && filteredResourceNames.length > 0 && (
+                  <div className="absolute z-30 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {filteredResourceNames.map((name) => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({ ...prev, resourceName: name }));
+                          setResourceDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Stream
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stream</label>
                 <select
                   required
                   value={formData.stream}
@@ -189,24 +264,50 @@ export const ResourceAllocationPage: React.FC = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Project
-                </label>
-                <select
+              {/* Project - type-ahead, excludes Completed */}
+              <div className="relative" ref={projectDropdownRef}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                <input
+                  type="text"
                   required
-                  value={formData.projectDescription}
-                  onChange={(e) => handleProjectSelect(e.target.value)}
+                  value={projectSearchText}
+                  onChange={(e) => {
+                    setProjectSearchText(e.target.value);
+                    setProjectDropdownOpen(true);
+                    if (!e.target.value) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        projectDescription: '',
+                        projectId: '',
+                      }));
+                    }
+                  }}
+                  onFocus={() => setProjectDropdownOpen(true)}
+                  placeholder="Type to search projects..."
                   className="w-full border rounded-lg px-3 py-2"
-                >
-                  <option value="">Select a project</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.description}>
-                      {p.description}
-                    </option>
-                  ))}
-                </select>
-                {projects.length === 0 && (
+                  autoComplete="off"
+                />
+                {projectDropdownOpen && (
+                  <div className="absolute z-30 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    {filteredProjects.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-gray-500">No matching projects</div>
+                    ) : (
+                      filteredProjects.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleProjectSelect(p.projectId)}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${
+                            formData.projectId === p.projectId ? 'bg-blue-50 text-blue-700' : ''
+                          }`}
+                        >
+                          {p.description}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+                {availableProjects.length === 0 && (
                   <p className="text-sm text-amber-600 mt-1">
                     No projects loaded. Import projects first.
                   </p>
