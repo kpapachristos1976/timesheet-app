@@ -7,7 +7,7 @@ import {
   GanttChart,
   Menu,
   X,
-  MessageSquare,
+  BotMessageSquare,
   ScanSearch,
 } from 'lucide-react';
 import { ImportPage } from './components/import/ImportPage';
@@ -25,7 +25,7 @@ const navItems: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: 'resources', label: 'Resources Dashboard', icon: <LayoutDashboard size={20} /> },
   { id: 'projects', label: 'Projects Dashboard', icon: <FolderKanban size={20} /> },
   { id: 'gantt', label: 'Gantt Chart', icon: <GanttChart size={20} /> },
-  { id: 'assistant', label: 'Data Assistant', icon: <MessageSquare size={20} /> },
+  { id: 'assistant', label: 'Data Assistant', icon: <BotMessageSquare size={20} /> },
 ];
 
 function App() {
@@ -62,7 +62,7 @@ function App() {
           {sidebarOpen ? (
             <div className="flex items-center gap-2">
               <ScanSearch size={24} className="text-blue-400" />
-              <h1 className="text-xl font-bold">WorkLens</h1>
+              <h1 className="text-xl font-bold">CapacityView</h1>
             </div>
           ) : (
             <ScanSearch size={24} className="text-blue-400 mx-auto" />
