@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   MessageSquare,
+  ScanSearch,
 } from 'lucide-react';
 import { ImportPage } from './components/import/ImportPage';
 import { ResourceAllocationPage } from './components/allocation/ResourceAllocationPage';
@@ -58,7 +59,14 @@ function App() {
         } bg-slate-800 text-white transition-all duration-300 flex flex-col`}
       >
         <div className="p-4 flex items-center justify-between border-b border-slate-700">
-          {sidebarOpen && <h1 className="text-xl font-bold">Timesheet App</h1>}
+          {sidebarOpen ? (
+            <div className="flex items-center gap-2">
+              <ScanSearch size={24} className="text-blue-400" />
+              <h1 className="text-xl font-bold">WorkLens</h1>
+            </div>
+          ) : (
+            <ScanSearch size={24} className="text-blue-400 mx-auto" />
+          )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1 hover:bg-slate-700 rounded"
