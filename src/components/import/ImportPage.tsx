@@ -4,12 +4,13 @@ import {
   TIMESHEET_FIELDS,
   PROJECT_FIELDS,
   ROLE_FIELDS,
+  RESOURCE_ALLOCATION_FIELDS,
   generateId,
 } from '../../utils/importUtils';
-import type { TimesheetEntry, Project, Role } from '../../types';
+import type { TimesheetEntry, Project, Role, ResourceAllocation, Stream } from '../../types';
 
 export const ImportPage: React.FC = () => {
-  const { setTimesheets, setProjects, setRoles, timesheets, projects, roles } = useStore();
+  const { setTimesheets, setProjects, setRoles, setResourceAllocations, timesheets, projects, roles, resourceAllocations } = useStore();
 
   const timesheetTransform = (mapped: Record<string, string>): TimesheetEntry => ({
     id: generateId(),
@@ -47,6 +48,17 @@ export const ImportPage: React.FC = () => {
     onshoreOffshore: mapped.onshoreOffshore || '',
   });
 
+  const allocationTransform = (mapped: Record<string, string>): ResourceAllocation => ({
+    id: generateId(),
+    resourceName: mapped.resourceName || '',
+    stream: (mapped.stream || 'Data Analysis') as Stream,
+    projectDescription: mapped.projectDescription || '',
+    projectId: mapped.projectId || '',
+    startDate: mapped.startDate || '',
+    endDate: mapped.endDate || '',
+    allocationPercentage: parseFloat(mapped.allocationPercentage) || 100,
+  });
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Import Data</h1>
@@ -74,6 +86,13 @@ export const ImportPage: React.FC = () => {
           targetFields={ROLE_FIELDS}
           onImport={setRoles}
           transformFn={roleTransform}
+        />
+
+        <FileImporter<ResourceAllocation>
+          title={`Resource Allocations (${resourceAllocations.length} records)`}
+          targetFields={RESOURCE_ALLOCATION_FIELDS}
+          onImport={setResourceAllocations}
+          transformFn={allocationTransform}
         />
       </div>
     </div>

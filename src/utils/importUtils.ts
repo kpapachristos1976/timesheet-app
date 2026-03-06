@@ -88,6 +88,16 @@ export const ROLE_FIELDS = [
   { key: 'onshoreOffshore', label: 'Onshore/Offshore' },
 ];
 
+export const RESOURCE_ALLOCATION_FIELDS = [
+  { key: 'resourceName', label: 'Resource Name' },
+  { key: 'stream', label: 'Stream' },
+  { key: 'projectDescription', label: 'Project Description' },
+  { key: 'projectId', label: 'Project ID' },
+  { key: 'startDate', label: 'Start Date' },
+  { key: 'endDate', label: 'End Date' },
+  { key: 'allocationPercentage', label: 'Allocation Percentage' },
+];
+
 export const DELIMITERS = [
   { value: ',', label: 'Comma (,)' },
   { value: ';', label: 'Semicolon (;)' },
