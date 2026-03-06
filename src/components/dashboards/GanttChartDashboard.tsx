@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronRight, ChevronDown } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { STREAMS } from '../../types';
 import { getTimelinePeriods, doRangesOverlap } from '../../utils/dateUtils';
@@ -25,9 +25,11 @@ export const GanttChartDashboard = () => {
     visible: boolean;
     x: number;
     y: number;
-    content: { projectDescription: string; percentage: number }[];
+    content: { label: string; percentage: number }[];
     total: number;
   }>({ visible: false, x: 0, y: 0, content: [], total: 0 });
+
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
   const projectDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -91,6 +93,34 @@ export const GanttChartDashboard = () => {
     return [...new Set(filteredAllocations.map((a) => a.resourceName))].sort();
   }, [filteredAllocations]);
 
+  const uniqueProjectsList = useMemo(() => {
+    const seen = new Map<string, string>();
+    filteredAllocations.forEach((a) => {
+      if (!seen.has(a.projectId)) {
+        seen.set(a.projectId, a.projectDescription || a.projectId);
+      }
+    });
+    return Array.from(seen.entries())
+      .map(([id, description]) => ({ id, description }))
+      .sort((a, b) => a.description.localeCompare(b.description));
+  }, [filteredAllocations]);
+
+  const getResourcesForProject = (projectId: string) => {
+    const resources = new Set(
+      filteredAllocations.filter((a) => a.projectId === projectId).map((a) => a.resourceName)
+    );
+    return [...resources].sort();
+  };
+
+  const toggleProject = (projectId: string) => {
+    setExpandedProjects((prev) => {
+      const next = new Set(prev);
+      if (next.has(projectId)) next.delete(projectId);
+      else next.add(projectId);
+      return next;
+    });
+  };
+
   const timelineRange = useMemo(() => {
     if (filteredAllocations.length === 0) {
       return { start: new Date(), end: new Date() };
@@ -128,11 +158,11 @@ export const GanttChartDashboard = () => {
   const getAggregatedData = (
     allocations: typeof filteredAllocations,
     periodIndex: number
-  ): { total: number; breakdown: { projectDescription: string; percentage: number }[] } => {
+  ): { total: number; breakdown: { label: string; percentage: number }[] } => {
     const period = periods[periodIndex];
     if (!period) return { total: 0, breakdown: [] };
 
-    const breakdown: { projectDescription: string; percentage: number }[] = [];
+    const breakdown: { label: string; percentage: number }[] = [];
     let total = 0;
 
     allocations.forEach((a) => {
@@ -141,7 +171,7 @@ export const GanttChartDashboard = () => {
 
       if (doRangesOverlap(allocationStart, allocationEnd, period.start, period.end)) {
         breakdown.push({
-          projectDescription: a.projectDescription || a.projectId,
+          label: a.projectDescription || a.projectId,
           percentage: a.allocationPercentage,
         });
         total += a.allocationPercentage;
@@ -151,9 +181,52 @@ export const GanttChartDashboard = () => {
     return { total, breakdown };
   };
 
+  const getProjectAggregatedData = (
+    projectId: string,
+    periodIndex: number
+  ): { total: number; breakdown: { label: string; percentage: number }[] } => {
+    const period = periods[periodIndex];
+    if (!period) return { total: 0, breakdown: [] };
+
+    const projAllocations = filteredAllocations.filter((a) => a.projectId === projectId);
+    const breakdown: { label: string; percentage: number }[] = [];
+    let total = 0;
+
+    projAllocations.forEach((a) => {
+      const allocationStart = parseISO(a.startDate);
+      const allocationEnd = parseISO(a.endDate);
+      if (doRangesOverlap(allocationStart, allocationEnd, period.start, period.end)) {
+        breakdown.push({ label: a.resourceName, percentage: a.allocationPercentage });
+        total += a.allocationPercentage;
+      }
+    });
+
+    return { total, breakdown };
+  };
+
+  const getResourceInProjectData = (
+    projectId: string,
+    resourceName: string,
+    periodIndex: number
+  ): number => {
+    const period = periods[periodIndex];
+    if (!period) return 0;
+
+    return filteredAllocations
+      .filter((a) => a.projectId === projectId && a.resourceName === resourceName)
+      .reduce((sum, a) => {
+        const s = parseISO(a.startDate);
+        const e = parseISO(a.endDate);
+        if (doRangesOverlap(s, e, period.start, period.end)) {
+          return sum + a.allocationPercentage;
+        }
+        return sum;
+      }, 0);
+  };
+
   const handleMouseEnter = (
     e: React.MouseEvent,
-    breakdown: { projectDescription: string; percentage: number }[],
+    breakdown: { label: string; percentage: number }[],
     total: number
   ) => {
     const rect = (e.target as HTMLElement).getBoundingClientRect();
@@ -370,12 +443,124 @@ export const GanttChartDashboard = () => {
               </div>
               {tooltip.content.map((item, i) => (
                 <div key={i} className="whitespace-nowrap">
-                  {item.projectDescription}: {item.percentage}%
+                  {item.label}: {item.percentage}%
                 </div>
               ))}
             </div>
           )}
         </div>
+      )}
+
+      {filteredAllocations.length > 0 && (
+        <>
+          <h2 className="text-xl font-bold mt-8">Project Allocation Timeline</h2>
+          <p className="text-gray-600">
+            Aggregated allocation per project across time. Expand to see individual resources.
+          </p>
+
+          <div className="bg-white rounded-lg shadow overflow-x-auto relative">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="sticky left-0 bg-gray-50 px-4 py-3 text-left text-sm font-medium text-gray-700 border-r min-w-56 z-10">
+                    Project
+                  </th>
+                  {periods.map((period, i) => (
+                    <th
+                      key={i}
+                      className="px-2 py-3 text-center text-xs font-medium text-gray-700 border-r min-w-20"
+                    >
+                      {period.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {uniqueProjectsList.map((project) => {
+                  const isExpanded = expandedProjects.has(project.id);
+                  const projectResources = getResourcesForProject(project.id);
+
+                  return (
+                    <>{/* Fragment for project row + child rows */}
+                      <tr key={project.id} className="border-t hover:bg-gray-50">
+                        <td className="sticky left-0 bg-white px-4 py-2 text-sm font-medium border-r z-10">
+                          <button
+                            onClick={() => toggleProject(project.id)}
+                            className="flex items-center gap-2 w-full text-left"
+                          >
+                            {isExpanded ? (
+                              <ChevronDown size={16} className="text-gray-500 flex-shrink-0" />
+                            ) : (
+                              <ChevronRight size={16} className="text-gray-500 flex-shrink-0" />
+                            )}
+                            <span className="truncate">{project.description}</span>
+                          </button>
+                        </td>
+                        {periods.map((_, periodIdx) => {
+                          const { total, breakdown } = getProjectAggregatedData(project.id, periodIdx);
+
+                          if (total === 0) {
+                            return <td key={periodIdx} className="px-1 py-2 border-r" />;
+                          }
+
+                          const cappedOpacity = Math.min(total, 200) / 200;
+
+                          return (
+                            <td key={periodIdx} className="px-1 py-2 border-r">
+                              <div
+                                className="h-6 rounded text-xs text-white flex items-center justify-center cursor-pointer"
+                                style={{
+                                  backgroundColor: BAR_COLOR,
+                                  opacity: Math.max(cappedOpacity, 0.3),
+                                }}
+                                onMouseEnter={(e) => handleMouseEnter(e, breakdown, total)}
+                                onMouseLeave={handleMouseLeave}
+                              >
+                                {total}%
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+
+                      {isExpanded &&
+                        projectResources.map((resourceName) => (
+                          <tr key={`${project.id}-${resourceName}`} className="border-t bg-gray-50/50">
+                            <td className="sticky left-0 bg-gray-50/80 pl-10 pr-4 py-1.5 text-sm text-gray-600 border-r z-10">
+                              {resourceName}
+                            </td>
+                            {periods.map((_, periodIdx) => {
+                              const pct = getResourceInProjectData(project.id, resourceName, periodIdx);
+
+                              if (pct === 0) {
+                                return <td key={periodIdx} className="px-1 py-1.5 border-r" />;
+                              }
+
+                              const cappedOpacity = Math.min(pct, 100) / 100;
+
+                              return (
+                                <td key={periodIdx} className="px-1 py-1.5 border-r">
+                                  <div
+                                    className="h-5 rounded text-xs text-white flex items-center justify-center"
+                                    style={{
+                                      backgroundColor: BAR_COLOR,
+                                      opacity: Math.max(cappedOpacity, 0.3),
+                                    }}
+                                  >
+                                    {pct}%
+                                  </div>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                    </>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
