@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
   "manifestVersion": "1.17",
   "version": "1.0.0",
-  "id": "capacityview-app-00000000-0000-0000-0000-000000000001",
+  "id": "b3f7a2c1-8e4d-4f6b-9a1c-2d5e8f0b3c7a",
   "developer": {
     "name": "CapacityView",
     "websiteUrl": "https://kpapachristos1976.github.io/timesheet-app/",
@@ -29,13 +29,6 @@
       "contentUrl": "https://kpapachristos1976.github.io/timesheet-app/",
       "websiteUrl": "https://kpapachristos1976.github.io/timesheet-app/",
       "scopes": ["personal"]
-    }
-  ],
-  "configurableTabs": [
-    {
-      "configurationUrl": "https://kpapachristos1976.github.io/timesheet-app/",
-      "canUpdateConfiguration": false,
-      "scopes": ["team", "groupChat"]
     }
   ],
   "permissions": ["identity", "messageTeamMembers"],
