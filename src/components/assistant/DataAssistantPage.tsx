@@ -47,7 +47,7 @@ export const DataAssistantPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Data Assistant</h1>
+      <h1 className="text-2xl font-bold">Assistant</h1>
       <p className="text-gray-600">
         Ask questions about your data across timesheets, projects, roles, and resource allocations.
       </p>

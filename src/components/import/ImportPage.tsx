@@ -77,6 +77,7 @@ export const ImportPage: React.FC = () => {
     startDate: normalizeDate(mapped.startDate),
     endDate: normalizeDate(mapped.endDate),
     allocationPercentage: parseFloat(mapped.allocationPercentage) || 100,
+    ragby: (mapped.ragby || '').trim(),
   });
 
   return (

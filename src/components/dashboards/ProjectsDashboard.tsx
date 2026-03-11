@@ -12,6 +12,15 @@ import {
 import { X } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { calculatePlannedHours } from '../../utils/dateUtils';
+import { parseISO, isValid, differenceInCalendarDays, format, eachMonthOfInterval, startOfMonth, endOfMonth } from 'date-fns';
+
+const RAGBY_COLORS: Record<string, string> = {
+  'On Track': '#22C55E',
+  'At Risk': '#EAB308',
+  'Delayed': '#EF4444',
+  'Completed': '#3B82F6',
+};
+const RAGBY_DEFAULT_COLOR = '#9CA3AF';
 
 export const ProjectsDashboard = () => {
   const { timesheets, projects, resourceAllocations } = useStore();
@@ -19,6 +28,7 @@ export const ProjectsDashboard = () => {
   const [searchText, setSearchText] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [ganttStartDate, setGanttStartDate] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -175,6 +185,59 @@ export const ProjectsDashboard = () => {
     );
   }, [chartData]);
 
+  const ganttProjects = useMemo(() => {
+    const inProgress = projects.filter(
+      (p) => p.status?.toLowerCase() === 'in progress'
+    );
+
+    let filtered = inProgress;
+    if (selectedProjectIds.length > 0) {
+      filtered = filtered.filter((p) => selectedProjectIds.includes(p.projectId));
+    }
+
+    return filtered
+      .filter((p) => {
+        const s = parseISO(p.startDate);
+        const e = parseISO(p.endDate);
+        return isValid(s) && isValid(e);
+      })
+      .map((p) => {
+        const allocs = resourceAllocations.filter((a) => a.projectId === p.projectId);
+        const ragby = allocs.length > 0 && allocs[0].ragby ? allocs[0].ragby : '';
+        return {
+          projectId: p.projectId,
+          title: p.projectTitle || p.description || p.projectId,
+          startDate: parseISO(p.startDate),
+          endDate: parseISO(p.endDate),
+          ragby,
+          color: RAGBY_COLORS[ragby] || RAGBY_DEFAULT_COLOR,
+        };
+      })
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+  }, [projects, resourceAllocations, selectedProjectIds]);
+
+  const ganttRange = useMemo(() => {
+    if (ganttProjects.length === 0) return { start: new Date(), end: new Date(), totalDays: 0 };
+    let start = ganttProjects.reduce((min, p) => (p.startDate < min ? p.startDate : min), ganttProjects[0].startDate);
+    const end = ganttProjects.reduce((max, p) => (p.endDate > max ? p.endDate : max), ganttProjects[0].endDate);
+    if (ganttStartDate) {
+      const custom = parseISO(ganttStartDate);
+      if (isValid(custom)) start = custom;
+    }
+    return { start, end, totalDays: Math.max(differenceInCalendarDays(end, start), 1) };
+  }, [ganttProjects, ganttStartDate]);
+
+  const ganttMonths = useMemo(() => {
+    if (ganttProjects.length === 0) return [];
+    try {
+      return eachMonthOfInterval({ start: ganttRange.start, end: ganttRange.end }).map((m) => ({
+        label: format(m, 'MMM yyyy'),
+        start: startOfMonth(m),
+        end: endOfMonth(m),
+      }));
+    } catch { return []; }
+  }, [ganttRange, ganttProjects.length]);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Projects Dashboard</h1>
@@ -287,6 +350,100 @@ export const ProjectsDashboard = () => {
           </div>
         </div>
       </div>
+
+      {ganttProjects.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold">Project Timeline (In Progress)</h3>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Start from:</label>
+              <input
+                type="date"
+                value={ganttStartDate}
+                onChange={(e) => setGanttStartDate(e.target.value)}
+                className="border rounded px-2 py-1 text-sm"
+              />
+              {ganttStartDate && (
+                <button onClick={() => setGanttStartDate('')} className="text-gray-400 hover:text-gray-600">
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3 mb-3 flex-wrap">
+            {Object.entries(RAGBY_COLORS).map(([label, color]) => (
+              <div key={label} className="flex items-center gap-1.5 text-xs text-gray-600">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: color }} />
+                {label}
+              </div>
+            ))}
+            <div className="flex items-center gap-1.5 text-xs text-gray-600">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: RAGBY_DEFAULT_COLOR }} />
+              Other / N/A
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="sticky left-0 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-700 border-r min-w-52 z-10">
+                    Project
+                  </th>
+                  {ganttMonths.map((m, i) => (
+                    <th key={i} className="px-1 py-2 text-center text-xs font-medium text-gray-700 border-r min-w-24">
+                      {m.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ganttProjects.map((proj) => (
+                  <tr key={proj.projectId} className="border-t hover:bg-gray-50">
+                    <td className="sticky left-0 bg-white px-3 py-2 text-sm border-r z-10">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: proj.color }} />
+                        <span className="truncate">{proj.title}</span>
+                      </div>
+                    </td>
+                    {ganttMonths.map((month, mIdx) => {
+                      const barStart = proj.startDate > month.start ? proj.startDate : month.start;
+                      const barEnd = proj.endDate < month.end ? proj.endDate : month.end;
+
+                      if (barStart > month.end || barEnd < month.start) {
+                        return <td key={mIdx} className="px-1 py-2 border-r" />;
+                      }
+
+                      const monthDays = differenceInCalendarDays(month.end, month.start) + 1;
+                      const offsetDays = Math.max(0, differenceInCalendarDays(barStart, month.start));
+                      const barDays = differenceInCalendarDays(barEnd, barStart) + 1;
+                      const leftPct = (offsetDays / monthDays) * 100;
+                      const widthPct = Math.min((barDays / monthDays) * 100, 100 - leftPct);
+
+                      return (
+                        <td key={mIdx} className="px-0 py-2 border-r relative">
+                          <div className="h-6 relative">
+                            <div
+                              className="absolute top-0 h-full rounded"
+                              style={{
+                                backgroundColor: proj.color,
+                                left: `${leftPct}%`,
+                                width: `${widthPct}%`,
+                                minWidth: '4px',
+                              }}
+                            />
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {chartData.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">

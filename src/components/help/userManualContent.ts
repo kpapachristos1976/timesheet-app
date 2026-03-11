@@ -75,6 +75,7 @@ export const USER_MANUAL: ManualSection[] = [
           'Start Date -- Allocation start date (YYYY-MM-DD format recommended).',
           'End Date -- Allocation end date (YYYY-MM-DD format recommended).',
           'Allocation Percentage -- The percentage of time allocated (e.g., 50 for 50%).',
+          'RAGBY -- Status indicator: On Track, At Risk, Delayed, Completed, or blank.',
         ],
       },
     ],
@@ -95,6 +96,7 @@ export const USER_MANUAL: ManualSection[] = [
           '   - Project: Type to search from imported projects (excludes Completed projects).',
           '   - Start Date / End Date: Select the allocation period.',
           '   - Allocation Percentage: Enter the percentage (1-100).',
+          '   - RAGBY: Select the status (On Track, At Risk, Delayed, Completed, or none).',
           '3. Click "Create" to save.',
         ],
       },
@@ -115,11 +117,22 @@ export const USER_MANUAL: ManualSection[] = [
     ],
     subsections: [
       {
-        title: '4.1 Features',
+        title: '4.1 Filters',
         content: [
-          'Bar chart comparing actual and planned hours per resource.',
-          'Filter by stream and resource name.',
-          'Detailed table showing the numeric breakdown.',
+          'Stream -- Filter by work stream.',
+          'Resource -- Filter by resource name.',
+          'From / To -- Filter the chart and table to a specific date range. Actual hours are filtered by Week Ending date; planned hours are clipped to the selected range.',
+        ],
+      },
+      {
+        title: '4.2 Resource Detail View',
+        content: [
+          'Click on any resource row in the table to open the detail view.',
+          'The detail view shows two timelines:',
+          '1. Actual Hours timeline -- Total actual hours per week or month. Expand a project row to see per-project breakdown.',
+          '2. Planned Hours timeline -- Total planned hours per week or month. Expand a project row to see per-project breakdown.',
+          'Use the View dropdown to switch between weekly and monthly granularity.',
+          'Click the back arrow to return to the main dashboard.',
         ],
       },
     ],
@@ -131,10 +144,20 @@ export const USER_MANUAL: ManualSection[] = [
     ],
     subsections: [
       {
-        title: '5.1 Features',
+        title: '5.1 Project Timeline (Gantt)',
+        content: [
+          'A Gantt chart at the top shows projects with status "In Progress" on a monthly timeline.',
+          'Each project bar is color-coded by its RAGBY status (from Resource Allocations):',
+          '  Green = On Track, Yellow = At Risk, Red = Delayed, Blue = Completed, Gray = Other/N/A.',
+          'Use the "Start from" date picker to adjust the beginning of the timeline.',
+          'The chart respects the project filter below.',
+        ],
+      },
+      {
+        title: '5.2 Projects Overview',
         content: [
           'Multi-select type-ahead project filter -- type to search and select multiple projects.',
-          'Projects with status "Completed" are automatically excluded.',
+          'Projects with status "Completed" are automatically excluded from the filter.',
           'Bar chart showing actual hours, allocated hours (EY), and planned hours per project.',
           'Second chart showing resource breakdown for selected projects.',
           'Resource breakdown table with detailed hours per resource per project.',
@@ -180,15 +203,15 @@ export const USER_MANUAL: ManualSection[] = [
     ],
   },
   {
-    title: '7. Data Assistant',
+    title: '7. Assistant',
     content: [
-      'The Data Assistant allows you to ask questions about your data using natural language.',
+      'The Assistant allows you to ask questions about your data using natural language.',
     ],
     subsections: [
       {
         title: '7.1 How to Use',
         content: [
-          '1. Navigate to "Data Assistant" from the sidebar.',
+          '1. Navigate to "Assistant" from the sidebar.',
           '2. Type a question in the search box or click a suggested question.',
           '3. Press Enter or click the Send button.',
           '4. Results are displayed in tables below.',

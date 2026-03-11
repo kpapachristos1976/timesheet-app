@@ -22,12 +22,12 @@ import { HelpPage } from './components/help/HelpPage';
 type Page = 'import' | 'allocation' | 'resources' | 'projects' | 'gantt' | 'assistant' | 'help';
 
 const navItems: { id: Page; label: string; icon: React.ReactNode }[] = [
-  { id: 'import', label: 'Import Data', icon: <Upload size={20} /> },
   { id: 'allocation', label: 'Resource Allocation', icon: <Users size={20} /> },
   { id: 'resources', label: 'Resources Dashboard', icon: <LayoutDashboard size={20} /> },
   { id: 'projects', label: 'Projects Dashboard', icon: <FolderKanban size={20} /> },
+  { id: 'import', label: 'Import Data', icon: <Upload size={20} /> },
   { id: 'gantt', label: 'Gantt Chart', icon: <GanttChart size={20} /> },
-  { id: 'assistant', label: 'Data Assistant', icon: <BotMessageSquare size={20} /> },
+  { id: 'assistant', label: 'Assistant', icon: <BotMessageSquare size={20} /> },
   { id: 'help', label: 'Help', icon: <HelpCircle size={20} /> },
 ];
 

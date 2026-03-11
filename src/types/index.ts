@@ -43,6 +43,7 @@ export interface ResourceAllocation {
   startDate: string;
   endDate: string;
   allocationPercentage: number;
+  ragby: string;
 }
 
 export type Stream =

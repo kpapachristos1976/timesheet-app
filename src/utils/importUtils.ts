@@ -96,6 +96,7 @@ export const RESOURCE_ALLOCATION_FIELDS = [
   { key: 'startDate', label: 'Start Date' },
   { key: 'endDate', label: 'End Date' },
   { key: 'allocationPercentage', label: 'Allocation Percentage' },
+  { key: 'ragby', label: 'RAGBY' },
 ];
 
 export const DELIMITERS = [
