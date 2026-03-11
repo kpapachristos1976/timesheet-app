@@ -202,8 +202,7 @@ export const ProjectsDashboard = () => {
         return isValid(s) && isValid(e);
       })
       .map((p) => {
-        const allocs = resourceAllocations.filter((a) => a.projectId === p.projectId);
-        const ragby = allocs.length > 0 && allocs[0].ragby ? allocs[0].ragby : '';
+        const ragby = p.ragby || '';
         return {
           projectId: p.projectId,
           title: p.projectTitle || p.description || p.projectId,
@@ -214,7 +213,7 @@ export const ProjectsDashboard = () => {
         };
       })
       .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-  }, [projects, resourceAllocations, selectedProjectIds]);
+  }, [projects, selectedProjectIds]);
 
   const ganttRange = useMemo(() => {
     if (ganttProjects.length === 0) return { start: new Date(), end: new Date(), totalDays: 0 };

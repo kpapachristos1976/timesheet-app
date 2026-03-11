@@ -59,6 +59,7 @@ export const ImportPage: React.FC = () => {
     startDate: mapped.startDate || '',
     endDate: mapped.endDate || '',
     allocatedHoursEY: parseFloat(mapped.allocatedHoursEY) || 0,
+    ragby: (mapped.ragby || '').trim(),
   });
 
   const roleTransform = (mapped: Record<string, string>): Role => ({
@@ -77,7 +78,6 @@ export const ImportPage: React.FC = () => {
     startDate: normalizeDate(mapped.startDate),
     endDate: normalizeDate(mapped.endDate),
     allocationPercentage: parseFloat(mapped.allocationPercentage) || 100,
-    ragby: (mapped.ragby || '').trim(),
   });
 
   return (

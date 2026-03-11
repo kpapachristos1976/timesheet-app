@@ -25,6 +25,7 @@ export interface Project {
   startDate: string;
   endDate: string;
   allocatedHoursEY: number;
+  ragby: string;
 }
 
 export interface Role {
@@ -43,7 +44,6 @@ export interface ResourceAllocation {
   startDate: string;
   endDate: string;
   allocationPercentage: number;
-  ragby: string;
 }
 
 export type Stream =

@@ -55,6 +55,7 @@ export const USER_MANUAL: ManualSection[] = [
           'Phase -- Current project phase.',
           'Start Date / End Date -- Project date range.',
           'Allocated Hours EY -- Total allocated hours for the project.',
+          'RAGBY -- Project status indicator: On Track, At Risk, Delayed, Completed, or blank. Used for color coding in the Projects Dashboard Gantt chart.',
         ],
       },
       {
@@ -75,7 +76,6 @@ export const USER_MANUAL: ManualSection[] = [
           'Start Date -- Allocation start date (YYYY-MM-DD format recommended).',
           'End Date -- Allocation end date (YYYY-MM-DD format recommended).',
           'Allocation Percentage -- The percentage of time allocated (e.g., 50 for 50%).',
-          'RAGBY -- Status indicator: On Track, At Risk, Delayed, Completed, or blank.',
         ],
       },
     ],
@@ -96,7 +96,6 @@ export const USER_MANUAL: ManualSection[] = [
           '   - Project: Type to search from imported projects (excludes Completed projects).',
           '   - Start Date / End Date: Select the allocation period.',
           '   - Allocation Percentage: Enter the percentage (1-100).',
-          '   - RAGBY: Select the status (On Track, At Risk, Delayed, Completed, or none).',
           '3. Click "Create" to save.',
         ],
       },
@@ -147,7 +146,7 @@ export const USER_MANUAL: ManualSection[] = [
         title: '5.1 Project Timeline (Gantt)',
         content: [
           'A Gantt chart at the top shows projects with status "In Progress" on a monthly timeline.',
-          'Each project bar is color-coded by its RAGBY status (from Resource Allocations):',
+          'Each project bar is color-coded by its RAGBY status (from Projects Reference):',
           '  Green = On Track, Yellow = At Risk, Red = Delayed, Blue = Completed, Gray = Other/N/A.',
           'Use the "Start from" date picker to adjust the beginning of the timeline.',
           'The chart respects the project filter below.',

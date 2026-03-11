@@ -13,7 +13,6 @@ interface AllocationFormData {
   startDate: string;
   endDate: string;
   allocationPercentage: number;
-  ragby: string;
 }
 
 const emptyForm: AllocationFormData = {
@@ -24,10 +23,7 @@ const emptyForm: AllocationFormData = {
   startDate: '',
   endDate: '',
   allocationPercentage: 100,
-  ragby: '',
 };
-
-const RAGBY_OPTIONS = ['On Track', 'At Risk', 'Delayed', 'Completed', ''];
 
 export const ResourceAllocationPage = () => {
   const {
@@ -143,7 +139,6 @@ export const ResourceAllocationPage = () => {
       startDate: allocation.startDate,
       endDate: allocation.endDate,
       allocationPercentage: allocation.allocationPercentage,
-      ragby: allocation.ragby || '',
     });
     setProjectSearchText(allocation.projectDescription);
     setEditingId(allocation.id);
@@ -370,24 +365,6 @@ export const ResourceAllocationPage = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  RAGBY
-                </label>
-                <select
-                  value={formData.ragby}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, ragby: e.target.value }))
-                  }
-                  className="w-full border rounded-lg px-3 py-2"
-                >
-                  <option value="">-- None --</option>
-                  {RAGBY_OPTIONS.filter(Boolean).map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
@@ -423,14 +400,13 @@ export const ResourceAllocationPage = () => {
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                 Allocation %
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">RAGBY</th>
               <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {filteredAllocations.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                   No allocations found. Click "Add Allocation" to create one.
                 </td>
               </tr>
@@ -445,7 +421,6 @@ export const ResourceAllocationPage = () => {
                   <td className="px-4 py-3 text-sm">{allocation.startDate}</td>
                   <td className="px-4 py-3 text-sm">{allocation.endDate}</td>
                   <td className="px-4 py-3 text-sm">{allocation.allocationPercentage}%</td>
-                  <td className="px-4 py-3 text-sm">{allocation.ragby || '-'}</td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleEdit(allocation)}
