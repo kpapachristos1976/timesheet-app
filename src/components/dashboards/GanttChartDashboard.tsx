@@ -3,7 +3,7 @@ import { X, ChevronRight, ChevronDown } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { STREAMS } from '../../types';
 import { getTimelinePeriods, doRangesOverlap } from '../../utils/dateUtils';
-import { parseISO, format, min, max } from 'date-fns';
+import { parseISO, format, min, max, isValid } from 'date-fns';
 
 type TimelineView = 'weekly' | 'monthly';
 
@@ -121,12 +121,20 @@ export const GanttChartDashboard = () => {
     });
   };
 
+  const validAllocations = useMemo(() => {
+    return filteredAllocations.filter((a) => {
+      const s = parseISO(a.startDate);
+      const e = parseISO(a.endDate);
+      return isValid(s) && isValid(e);
+    });
+  }, [filteredAllocations]);
+
   const timelineRange = useMemo(() => {
-    if (filteredAllocations.length === 0) {
+    if (validAllocations.length === 0) {
       return { start: new Date(), end: new Date() };
     }
 
-    const dates = filteredAllocations.flatMap((a) => [
+    const dates = validAllocations.flatMap((a) => [
       parseISO(a.startDate),
       parseISO(a.endDate),
     ]);
@@ -144,16 +152,16 @@ export const GanttChartDashboard = () => {
     }
 
     return { start: rangeStart, end: rangeEnd };
-  }, [filteredAllocations, dateRange]);
+  }, [validAllocations, dateRange]);
 
   const periods = useMemo(() => {
-    if (filteredAllocations.length === 0) return [];
+    if (validAllocations.length === 0) return [];
     return getTimelinePeriods(
       format(timelineRange.start, 'yyyy-MM-dd'),
       format(timelineRange.end, 'yyyy-MM-dd'),
       timelineView
     );
-  }, [timelineRange, timelineView, filteredAllocations.length]);
+  }, [timelineRange, timelineView, validAllocations.length]);
 
   const getAggregatedData = (
     allocations: typeof filteredAllocations,
@@ -168,6 +176,7 @@ export const GanttChartDashboard = () => {
     allocations.forEach((a) => {
       const allocationStart = parseISO(a.startDate);
       const allocationEnd = parseISO(a.endDate);
+      if (!isValid(allocationStart) || !isValid(allocationEnd)) return;
 
       if (doRangesOverlap(allocationStart, allocationEnd, period.start, period.end)) {
         breakdown.push({
@@ -195,6 +204,7 @@ export const GanttChartDashboard = () => {
     projAllocations.forEach((a) => {
       const allocationStart = parseISO(a.startDate);
       const allocationEnd = parseISO(a.endDate);
+      if (!isValid(allocationStart) || !isValid(allocationEnd)) return;
       if (doRangesOverlap(allocationStart, allocationEnd, period.start, period.end)) {
         breakdown.push({ label: a.resourceName, percentage: a.allocationPercentage });
         total += a.allocationPercentage;
@@ -217,6 +227,7 @@ export const GanttChartDashboard = () => {
       .reduce((sum, a) => {
         const s = parseISO(a.startDate);
         const e = parseISO(a.endDate);
+        if (!isValid(s) || !isValid(e)) return sum;
         if (doRangesOverlap(s, e, period.start, period.end)) {
           return sum + a.allocationPercentage;
         }
