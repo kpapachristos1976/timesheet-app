@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "capacityview-app-00000000-0000-0000-0000-000000000001",
+  "developer": {
+    "name": "CapacityView",
+    "websiteUrl": "https://kpapachristos1976.github.io/timesheet-app/",
+    "privacyUrl": "https://kpapachristos1976.github.io/timesheet-app/",
+    "termsOfUseUrl": "https://kpapachristos1976.github.io/timesheet-app/"
+  },
+  "name": {
+    "short": "CapacityView",
+    "full": "CapacityView - Resource Planning & Timesheet Analysis"
+  },
+  "description": {
+    "short": "Resource planning and timesheet analysis tool",
+    "full": "CapacityView is a resource planning and timesheet analysis application. Import timesheet data, manage resource allocations, and visualize workload through interactive dashboards including Gantt charts, resource and project dashboards, and a data assistant."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#2563EB",
+  "staticTabs": [
+    {
+      "entityId": "capacityview-tab",
+      "name": "CapacityView",
+      "contentUrl": "https://kpapachristos1976.github.io/timesheet-app/",
+      "websiteUrl": "https://kpapachristos1976.github.io/timesheet-app/",
+      "scopes": ["personal"]
+    }
+  ],
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://kpapachristos1976.github.io/timesheet-app/",
+      "canUpdateConfiguration": false,
+      "scopes": ["team", "groupChat"]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["kpapachristos1976.github.io"]
+}
