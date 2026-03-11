@@ -9,6 +9,7 @@ import {
   X,
   BotMessageSquare,
   ScanSearch,
+  HelpCircle,
 } from 'lucide-react';
 import { ImportPage } from './components/import/ImportPage';
 import { ResourceAllocationPage } from './components/allocation/ResourceAllocationPage';
@@ -16,8 +17,9 @@ import { ResourcesDashboard } from './components/dashboards/ResourcesDashboard';
 import { ProjectsDashboard } from './components/dashboards/ProjectsDashboard';
 import { GanttChartDashboard } from './components/dashboards/GanttChartDashboard';
 import { DataAssistantPage } from './components/assistant/DataAssistantPage';
+import { HelpPage } from './components/help/HelpPage';
 
-type Page = 'import' | 'allocation' | 'resources' | 'projects' | 'gantt' | 'assistant';
+type Page = 'import' | 'allocation' | 'resources' | 'projects' | 'gantt' | 'assistant' | 'help';
 
 const navItems: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: 'import', label: 'Import Data', icon: <Upload size={20} /> },
@@ -26,6 +28,7 @@ const navItems: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: 'projects', label: 'Projects Dashboard', icon: <FolderKanban size={20} /> },
   { id: 'gantt', label: 'Gantt Chart', icon: <GanttChart size={20} /> },
   { id: 'assistant', label: 'Data Assistant', icon: <BotMessageSquare size={20} /> },
+  { id: 'help', label: 'Help', icon: <HelpCircle size={20} /> },
 ];
 
 function App() {
@@ -46,6 +49,8 @@ function App() {
         return <GanttChartDashboard />;
       case 'assistant':
         return <DataAssistantPage />;
+      case 'help':
+        return <HelpPage />;
       default:
         return <ImportPage />;
     }
